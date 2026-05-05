@@ -10,202 +10,200 @@
   ╚══════════════════════════════════════════════════╝
 ```
 
-Mythos, **2–6 oyuncunun** TCP soketleri üzerinden bağlanıp Yunan tanrılarını seçerek **sıra tabanlı bir ölüm dövüşüne** girdiği, terminalde çalışan çok oyunculu bir Python oyunudur. Her tanrının kendine özgü pasif yetenekleri, özel güçleri ve hikâye anlatı şablonları vardır. Her hamle, Olimpos'un destanına işlenmektedir.
+Mythos is a multiplayer terminal battle game where **2–6 players** connect over TCP sockets, choose a Greek god, and fight to the death in a turn-based arena. Each god has unique passive abilities, special powers, and narrative story templates. Every move is etched into the Epic of Olympus.
 
 ---
 
-## 🗂️ İçindekiler
+## 🗂️ Table of Contents
 
-- [Özellikler](#-özellikler)
-- [Tanrılar](#-tanrılar)
-- [Durum Etkileri](#-durum-etkileri)
-- [Olimpos Olayları](#%EF%B8%8F-olimpos-olayları)
-- [Kurulum](#-kurulum)
-- [Nasıl Oynanır](#-nasıl-oynanır)
-- [Teknik Mimari](#%EF%B8%8F-teknik-mimari)
-- [Dosya Yapısı](#-dosya-yapısı)
-
----
-
-## ✨ Özellikler
-
-- 🧵 **Çok oyunculu** — 2 ile 6 oyuncu arasında, TCP soketleri üzerinden gerçek zamanlı
-- ⚡ **12 benzersiz tanrı** — Her birinin kendine özgü HP/ATK/DEF değerleri, özel gücü ve pasif yeteneği
-- 🔥 **6 durum etkisi** — Burn, Frozen, Blessed, Cursed, Poisoned, Enraged
-- 🌩️ **Olimpos Olayları** — Her turda %15 ihtimalle devreye giren rastgele ilahi müdahaleler
-- 📜 **Destanlar ve Mezar Yazıtları** — Her oyunun sonunda tüm savaş olaylarından otomatik oluşturulan "Olimpos Destanı" ve her oyuncuya özel unvan + istatistik ekranı
-- 🎨 **Renkli terminal arayüzü** — `colorama` ile ANSI renkler, semboller ve emoji'lerle bezenmiş tam renkli bir terminal deneyimi
-- ⏱️ **30 saniyelik hamle süresi** — Süre aşımında otomatik olarak "Savun" hamlesi seçilir
+- [Features](#-features)
+- [Gods](#%EF%B8%8F-gods)
+- [Status Effects](#-status-effects)
+- [Olympus Events](#%EF%B8%8F-olympus-events)
+- [Installation](#-installation)
+- [How to Play](#%EF%B8%8F-how-to-play)
+- [Technical Architecture](#%EF%B8%8F-technical-architecture)
+- [File Structure](#-file-structure)
 
 ---
 
-## ⚔️ Tanrılar
+## ✨ Features
 
-| # | Tanrı | Sembol | HP | ATK | DEF | Özel Güç | Pasif |
-|---|-------|--------|-----|-----|-----|-----------|-------|
-| 1 | Zeus | ⚡ | 100 | 30 | 15 | Lightning Storm | Storm Aura — %20 ihtimalle hasarı geri yansıtır |
-| 2 | Poseidon | 🌊 | 110 | 25 | 20 | Tsunami | Tide Pull — Her tur başında +5 HP |
-| 3 | Athena | 🦉 | 90 | 20 | 35 | Shield of Wisdom | Tactical Mind — Savunma hamlesi +5 ek HP |
-| 4 | Ares | ⚔️ | 120 | 38 | 8 | Blood Frenzy | Bloodlust — Her öldürme sonrası kalıcı +3 ATK |
-| 5 | Hermes | 🪶 | 85 | 28 | 15 | Divine Speed | Quicksilver — %30 dodge şansı |
-| 6 | Hades | 💀 | 130 | 28 | 22 | Soul Drain | Undying — Oyun başına bir kez ölümden 1 HP ile döner |
-| 7 | Apollo | 🌞 | 95 | 26 | 18 | Solar Flare | Healer's Touch — İttifak hamlesi 20 HP iyileştirir |
-| 8 | Artemis | 🌙 | 88 | 32 | 14 | Moonshot | Hunter's Focus — Her turda ilk saldırı maksimum hasarla çarpar |
-| 9 | Aphrodite | 💖 | 80 | 18 | 20 | Enthrall | Charm Aura — %25 ihtimalle saldırganı büyüleyip saldırıyı iptal eder |
-| 10 | Hephaestus | 🔨 | 115 | 24 | 28 | Forge Blast | Iron Skin — Tüm gelen hasarları 5 azaltır |
-| 11 | Dionysus | 🍇 | 92 | 22 | 16 | Divine Madness | Chaos Brew — Her tur ±15 HP/ATK rastgele değişir |
-| 12 | Persephone | 🌸 | 98 | 24 | 22 | Bloom & Wither | Seasonal Shift — Çift turlarda +ATK, tek turlarda +DEF |
+- 🧵 **Multiplayer** — 2 to 6 players, connected in real time over TCP sockets
+- ⚡ **12 unique gods** — each with distinct HP/ATK/DEF stats, a special power, and a passive ability
+- 🔥 **6 status effects** — Burn, Frozen, Blessed, Cursed, Poisoned, Enraged
+- 🌩️ **Olympus Events** — random divine interventions with a 15% chance each round
+- 📜 **Epics & Epitaphs** — at game end, an auto-generated *Epic of Olympus* recounts every battle event; each player receives a personal epitaph with stats and a legendary title
+- 🎨 **Colorful terminal UI** — full ANSI color, symbols, and emojis via `colorama`
+- ⏱️ **30-second move timer** — if a player times out, the server auto-selects Defend
 
 ---
 
-## 🔥 Durum Etkileri
+## ⚔️ Gods
 
-| Etki | Emoji | Açıklama |
-|------|-------|----------|
-| `burn` | 🔥 | Her tur -8 HP |
-| `frozen` | ❄️ | Bir sonraki turu kaybettirir |
-| `blessed` | ✨ | Bu turda +10 ATK |
+| # | God | Symbol | HP | ATK | DEF | Special Power | Passive |
+|---|-----|--------|-----|-----|-----|---------------|---------|
+| 1 | Zeus | ⚡ | 100 | 30 | 15 | Lightning Storm | Storm Aura — 20% chance to reflect 10 damage back |
+| 2 | Poseidon | 🌊 | 110 | 25 | 20 | Tsunami | Tide Pull — Heals 5 HP at the start of every turn |
+| 3 | Athena | 🦉 | 90 | 20 | 35 | Shield of Wisdom | Tactical Mind — Defend restores 5 extra HP |
+| 4 | Ares | ⚔️ | 120 | 38 | 8 | Blood Frenzy | Bloodlust — Gains permanent +3 ATK per kill |
+| 5 | Hermes | 🪶 | 85 | 28 | 15 | Divine Speed | Quicksilver — 30% chance to dodge any attack |
+| 6 | Hades | 💀 | 130 | 28 | 22 | Soul Drain | Undying — Once per game, survives a killing blow with 1 HP |
+| 7 | Apollo | 🌞 | 95 | 26 | 18 | Solar Flare | Healer's Touch — Alliance heals 20 HP instead of 10 |
+| 8 | Artemis | 🌙 | 88 | 32 | 14 | Moonshot | Hunter's Focus — First attack each round always hits for max damage |
+| 9 | Aphrodite | 💖 | 80 | 18 | 20 | Enthrall | Charm Aura — 25% chance an attacker is charmed and skips their attack |
+| 10 | Hephaestus | 🔨 | 115 | 24 | 28 | Forge Blast | Iron Skin — All incoming damage reduced by 5 |
+| 11 | Dionysus | 🍇 | 92 | 22 | 16 | Divine Madness | Chaos Brew — Random ±15 HP or ATK bonus/penalty each turn |
+| 12 | Persephone | 🌸 | 98 | 24 | 22 | Bloom & Wither | Seasonal Shift — Even rounds: +ATK; odd rounds: +DEF |
+
+---
+
+## 🔥 Status Effects
+
+| Effect | Emoji | Description |
+|--------|-------|-------------|
+| `burn` | 🔥 | -8 HP per turn |
+| `frozen` | ❄️ | Skips next turn |
+| `blessed` | ✨ | +10 ATK this turn |
 | `cursed` | 🌑 | -10 DEF |
-| `poisoned` | ☠️ | Her tur -5 HP |
+| `poisoned` | ☠️ | -5 HP per turn |
 | `enraged` | 😡 | +15 ATK, -15 DEF |
 
-Aynı etki birden fazla kez uygulanamaz; yalnızca süresi uzar.
+The same effect cannot stack — applying it again only refreshes the duration.
 
 ---
 
-## ⛈️ Olimpos Olayları
+## ⛈️ Olympus Events
 
-Her tur başında **%15 ihtimalle** ilahi bir olay tetiklenir:
+Each round has a **15% chance** of triggering a divine intervention:
 
-| Olay | Etki |
-|------|------|
-| ⚡ Zeus'un yıldırımı | Tüm tanrılar 10 hasar alır |
-| 💚 Hera'nın lütfu | Tüm tanrılar 15 HP kazanır |
-| 🔀 Kader'in müdahalesi | Tur sırası karıştırılır |
-| 🔥 Prometheus'un hediyesi | Aktif oyuncu `blessed` kazanır |
-| ☠️ Pandora'nın kutusu | Rastgele bir oyuncu `poisoned` olur |
-| 🌬️ İlahi rüzgar | Tüm durum etkileri temizlenir |
-| 🌟 Kahin'in sözü | En düşük HP'li tanrı 20 HP kazanır |
-| 😡 Ares'in arenası | Tüm tanrılar 1 tur `enraged` olur |
+| Event | Effect |
+|-------|--------|
+| ⚡ Zeus sends a thunderbolt | All gods take 10 damage |
+| 💚 Hera blesses the arena | All gods heal 15 HP |
+| 🔀 The Fates intervene | Turn order is shuffled |
+| 🔥 Prometheus gifts fire | The active player gains `blessed` |
+| ☠️ Pandora's box opens | A random player is poisoned |
+| 🌬️ A divine wind blows | All status effects are cleared |
+| 🌟 The Oracle speaks | The weakest god heals 20 HP |
+| 😡 Ares ignites the arena | All gods are enraged for 1 turn |
 
 ---
 
-## 🚀 Kurulum
+## 🚀 Installation
 
-### Gereksinimler
+### Requirements
 
 - Python 3.8+
-- `colorama` kütüphanesi
+- `colorama` library
 
-### Adımlar
+### Steps
 
 ```bash
-# Repoyu klonla
+# Clone the repository
 git clone https://github.com/ozgemelteminan/olympus-arena.git
 cd olympus-arena
 
-# Bağımlılıkları yükle
+# Install dependencies
 pip install colorama
 
-# Sunucuyu başlat
+# Start the server
 python server.py
 ```
 
-Ayrı terminal pencerelerinde her oyuncu için:
+Then, in a **separate terminal window for each player**:
 
 ```bash
 python client.py
 ```
 
-> Varsayılan olarak sunucu `127.0.0.1:5555` adresinde çalışır.  
-> Ağ üzerinden oynamak için `server.py` ve `client.py` içindeki `HOST` değerini sunucu IP'siyle değiştirin.
+> By default the server runs on `127.0.0.1:5555`.  
+> To play over a network, update the `HOST` value in both `server.py` and `client.py` to the server machine's IP address.
 
 ---
 
-## 🕹️ Nasıl Oynanır
+## 🕹️ How to Play
 
-### Bağlantı ve Tanrı Seçimi
+### Connecting & Choosing a God
 
-1. `python client.py` ile sunucuya bağlan
-2. Kullanıcı adını gir
-3. Listeden bir tanrı seç (1-12)
-4. İkinci oyuncu bağlandığında oyun otomatik başlar
+1. Run `python client.py` to connect to the server
+2. Enter your username
+3. Browse the god roster and pick a number (1–12)
+4. The game starts automatically once a second player connects
 
-### Hamle Sistemi
+### Move System
 
-Her tur, sırayla her oyuncudan hamle beklenir:
+On your turn, choose from five actions:
 
 ```
-  [1] Attack      — Hedef seç, normal saldırı yap
-  [2] Defend      — Savun ve 10-20 HP iyileştir
-  [3] Alliance    — Bir müttefik seç, ikiniz de 10 HP kazan
-  [4] Special     — Özel gücünü kullan (tüm düşmanlara 18-28 hasar)
-  [5] Steal HP    — Hedeften 10-20 HP çal
+  [1] Attack       — Pick a target and deal damage
+  [2] Defend       — Recover 10–20 HP
+  [3] Alliance     — Choose an ally; both of you heal 10 HP
+  [4] Special      — Unleash your god's power on all enemies (18–28 dmg)
+  [5] Steal HP     — Drain 10–20 HP from a target and add it to your own
 ```
 
-**Hamle formatı:** `<hamle> <hedef>` — örneğin `1 2` (2. oyuncuya saldır), `2` (savun)
+**Input format:** `<move> <target>` — e.g. `1 2` (attack player 2), `2` (defend)
 
-### Oyun Sonu
+### End of Game
 
-Son hayatta kalan tanrı Olimpos'un hâkimi olur. Oyun bitiminde:
+The last god standing rules Olympus. After the final blow:
 
-- 🏆 **Kazanan ilanı**
-- 📜 **The Epic of Olympus** — tüm savaş olaylarının destanı
-- 🪦 **Kişisel Mezar Yazıtları** — her oyuncunun istatistikleri ve kazandığı unvan
+- 🏆 **Winner announcement**
+- 📜 **The Epic of Olympus** — a full narrative of every battle event
+- 🪦 **Personal Epitaphs** — each player's stats and their earned legendary title
 
-Örnek unvanlar: `"The Godslayer"`, `"Herald of Peace"`, `"The Untouchable"`, `"Ruler of Olympus"`
+Example titles: `"The Godslayer"`, `"Herald of Peace"`, `"The Untouchable"`, `"Ruler of Olympus"`
 
 ---
 
-## 🏛️ Teknik Mimari
+## 🏛️ Technical Architecture
 
 ```
-┌─────────────┐        TCP/5555        ┌──────────────────────┐
-│  client.py  │ ◄──────────────────── │     server.py        │
-│             │                        │                      │
-│  - Gönder   │ ──────────────────────►│  handle_client()     │
-│  - Al/Göster│                        │  game_loop()         │
-└─────────────┘                        │  process_move()      │
-                                        │  tick_status()       │
-┌─────────────┐        TCP/5555        │  trigger_olympus_    │
-│  client.py  │ ◄──────────────────── │    event()           │
-│  (oyuncu 2) │ ──────────────────────►│                      │
-└─────────────┘                        │  GameState (paylaşımlı│
-                                        │  threading.Lock ile) │
-     ...                                └──────────────────────┘
+┌─────────────┐        TCP/5555        ┌──────────────────────────┐
+│  client.py  │ ◄──────────────────── │        server.py         │
+│             │                        │                          │
+│  - Send     │ ──────────────────────►│  handle_client()         │
+│  - Receive  │                        │  game_loop()             │
+└─────────────┘                        │  process_move()          │
+                                        │  tick_status()           │
+┌─────────────┐        TCP/5555        │  trigger_olympus_event() │
+│  client.py  │ ◄──────────────────── │                          │
+│  (player 2) │ ──────────────────────►│  GameState               │
+└─────────────┘                        │  (shared, Lock-protected)│
+     ...                                └──────────────────────────┘
 ```
 
-- **Sunucu** her client bağlantısı için ayrı bir thread açar (`threading.Thread`)
-- **Oyun durumu** tek bir `GameState` nesnesiyle yönetilir ve `threading.Lock` ile thread-safe tutulur
-- **Hamle sırası** `turn_order` listesiyle takip edilir; elenen oyuncular listeden çıkarılır
-- **Yayın** tüm mesajlar `broadcast_all()` ile tüm bağlı oyunculara aynı anda gönderilir
-- **Input timeout** — 30 saniye içinde hamle gönderilmezse sunucu otomatik `"2"` (savun) seçer
+- The **server** spawns a dedicated thread per client via `threading.Thread`
+- **Game state** lives in a single `GameState` object, kept thread-safe with `threading.Lock`
+- **Turn order** is tracked in a list; eliminated players are removed each round
+- **Broadcasting** — every message is sent to all connected players simultaneously via `broadcast_all()`
+- **Input timeout** — `socket.settimeout(30)` enforces the 30-second move limit server-side
 
-### Kullanılan Modüller
+### Modules Used
 
-| Modül | Amaç |
-|-------|-------|
-| `socket` | TCP bağlantı yönetimi |
-| `threading` | Her client için ayrı thread, `Lock` ile senkronizasyon |
-| `random` | Hasar hesaplama, olay seçimi, şablon seçimi |
-| `time` | Tur arası bekleme (`sleep`) |
-| `colorama` | ANSI renk kodları (Windows uyumlu) |
+| Module | Purpose |
+|--------|---------|
+| `socket` | TCP connection management |
+| `threading` | Per-client threads and `Lock`-based synchronization |
+| `random` | Damage rolls, event selection, narrative template picks |
+| `time` | Pacing delays between turns (`sleep`) |
+| `colorama` | Cross-platform ANSI color codes |
 
 ---
 
-## 📁 Dosya Yapısı
+## 📁 File Structure
 
 ```
 olympus-arena/
-├── server.py      # Oyun mantığı, sunucu, tüm sistem burada
-└── client.py      # Basit terminal istemcisi — gönder/al
+├── server.py      # All game logic, server loop, and state management
+└── client.py      # Lightweight terminal client — send and receive
 ```
 
 ---
 
-
-Bu proje **CMPE322 — Computer Networks** dersi kapsamında geliştirilmiştir.  
-Temel ağ kavramlarını (TCP soketleri, istemci-sunucu mimarisi, thread yönetimi) oyun tasarımıyla birleştiren bir dönem projesidir.
+This project was developed for **CMPE322 — Computer Networks**.  
+It demonstrates core networking concepts — TCP sockets, client-server architecture, and multi-threaded connection handling — through an interactive game.
 
 ---
 
