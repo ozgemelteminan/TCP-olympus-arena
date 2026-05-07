@@ -5,7 +5,7 @@
 
 ```
   ╔══════════════════════════════════════════════════╗
-  ║     ⚡  MYTHOS — THE EPIC OF OLYMPUS  ⚡          ║
+  ║     ⚡  MYTHOS — THE EPIC OF OLYMPUS  ⚡           ║
   ║   A multiplayer terminal battle game in Python   ║
   ╚══════════════════════════════════════════════════╝
 ```
