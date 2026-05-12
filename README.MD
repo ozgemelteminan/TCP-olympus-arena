@@ -161,17 +161,17 @@ Example titles: `"The Godslayer"`, `"Herald of Peace"`, `"The Untouchable"`, `"R
 
 ```
 ┌─────────────┐        TCP/5555        ┌──────────────────────────┐
-│  client.py  │ ◄──────────────────── │        server.py         │
+│  client.py  │ ◄────────────────────  │        server.py         │
 │             │                        │                          │
 │  - Send     │ ──────────────────────►│  handle_client()         │
 │  - Receive  │                        │  game_loop()             │
 └─────────────┘                        │  process_move()          │
-                                        │  tick_status()           │
+                                       │  tick_status()           │
 ┌─────────────┐        TCP/5555        │  trigger_olympus_event() │
-│  client.py  │ ◄──────────────────── │                          │
+│  client.py  │ ◄────────────────────  │                          │
 │  (player 2) │ ──────────────────────►│  GameState               │
 └─────────────┘                        │  (shared, Lock-protected)│
-     ...                                └──────────────────────────┘
+     ...                               └──────────────────────────┘
 ```
 
 - The **server** spawns a dedicated thread per client via `threading.Thread`
